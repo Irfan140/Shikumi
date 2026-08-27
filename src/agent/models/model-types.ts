@@ -31,10 +31,19 @@ export type ModelResponse = {
   content: string;
   toolCalls: ModelToolCall[];
   finishReason: "stop" | "tool_calls" | "length" | "error";
-  usage?: { promptTokens: number; completionTokens: number; totalTokens: number };
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
 };
 
 export type ModelStreamEvent =
   | { type: "text.delta"; delta: string }
-  | { type: "tool_call.delta"; toolCallId: string; nameDelta?: string; argsDelta?: string }
+  | {
+      type: "tool_call.delta";
+      toolCallId: string;
+      nameDelta?: string;
+      argsDelta?: string;
+    }
   | { type: "done"; response: ModelResponse };

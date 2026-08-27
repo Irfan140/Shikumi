@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
-import React from "react";
 import { render } from "ink";
-import { AppUI } from "../ui/app.js";
+import React from "react";
 import { createApp } from "../application/bootstrap/create-app.js";
-import { runPrompt, listSessions } from "./cli.js";
+import { AppUI } from "../ui/app.js";
+import { listSessions, runPrompt } from "./cli.js";
 
 const args = process.argv.slice(2);
 const cmd = args[0];
@@ -12,7 +12,7 @@ async function main() {
   if (cmd === "run") {
     const prompt = args.slice(1).join(" ");
     if (!prompt) {
-      console.error("Usage: shikumi run \"<prompt>\"");
+      console.error('Usage: shikumi run "<prompt>"');
       process.exit(1);
     }
     await runPrompt(prompt);
@@ -22,7 +22,7 @@ async function main() {
     const sid = args[1];
     const prompt = args.slice(2).join(" ");
     if (!sid) {
-      console.error("Usage: shikumi resume <session-id> \"<prompt>\"");
+      console.error('Usage: shikumi resume <session-id> "<prompt>"');
       process.exit(1);
     }
     if (prompt) await runPrompt(prompt, sid);
@@ -30,7 +30,9 @@ async function main() {
       const app = await createApp();
       await app.preloadSession(sid);
       await app.mcpManager.connectAll().catch(() => {});
-      const inst = render(React.createElement(AppUI, { app, initialSessionId: sid }));
+      const inst = render(
+        React.createElement(AppUI, { app, initialSessionId: sid }),
+      );
       setupShutdown(app, inst);
       await inst.waitUntilExit();
     }
@@ -56,9 +58,19 @@ async function main() {
     }
     const { loadConfig } = await import("../config/config.js");
     const cfg = loadConfig();
-    const redacted = { ...cfg, model: { ...cfg.model, apiKey: cfg.model.apiKey ? `${cfg.model.apiKey.slice(0, 7)}…${cfg.model.apiKey.slice(-4)}` : undefined } };
+    const redacted = {
+      ...cfg,
+      model: {
+        ...cfg.model,
+        apiKey: cfg.model.apiKey
+          ? `${cfg.model.apiKey.slice(0, 7)}…${cfg.model.apiKey.slice(-4)}`
+          : undefined,
+      },
+    };
     console.log(JSON.stringify(redacted, null, 2));
-    console.log("\nBYOK: set via `shikumi setup`, `shikumi config set model.apiKey <sk-...>`, env OPENAI_API_KEY, or .shikumi/config.json");
+    console.log(
+      "\nBYOK: set via `shikumi setup`, `shikumi config set model.apiKey <sk-...>`, env OPENAI_API_KEY, or .shikumi/config.json",
+    );
     return;
   }
   if (cmd === "--help" || cmd === "-h" || cmd === "help") {
@@ -73,7 +85,10 @@ async function main() {
   await inst.waitUntilExit();
 }
 
-function setupShutdown(app: Awaited<ReturnType<typeof createApp>>, inst: { unmount: () => void }) {
+function setupShutdown(
+  app: Awaited<ReturnType<typeof createApp>>,
+  inst: { unmount: () => void },
+) {
   const shutdown = async () => {
     try {
       await app.shutdown();

@@ -1,6 +1,12 @@
-import { ContextManager, defaultSystemPrompt } from "../../agent/context/context-manager.js";
+import {
+  ContextManager,
+  defaultSystemPrompt,
+} from "../../agent/context/context-manager.js";
 import { InMemoryMessageStore } from "../../agent/context/message-store.js";
-import { MockProvider, OpenAIProvider } from "../../agent/models/providers/openai-provider.js";
+import {
+  MockProvider,
+  OpenAIProvider,
+} from "../../agent/models/providers/openai-provider.js";
 import { AgentLoop } from "../../agent/runtime/agent-loop.js";
 import { RunManager } from "../../agent/runtime/run-manager.js";
 import { ToolRegistry } from "../../agent/tools/tool-registry.js";
@@ -8,7 +14,11 @@ import { loadConfig } from "../../config/config.js";
 import { openDatabase } from "../../infrastructure/database/sqlite.js";
 import { createLogger } from "../../infrastructure/logging/logger.js";
 import { McpManager } from "../../mcp/manager/mcp-manager.js";
-import { SqliteMessageRepository, SqliteSessionRepository, InMemorySessionRepository } from "../../sessions/repository.js";
+import {
+  InMemorySessionRepository,
+  SqliteMessageRepository,
+  SqliteSessionRepository,
+} from "../../sessions/repository.js";
 import { SessionManager } from "../../sessions/session-manager.js";
 import { registerBuiltInTools } from "../../tools/index.js";
 
@@ -37,7 +47,11 @@ export async function createApp(overrides?: { workspaceRoot?: string }) {
   const mcpManager = new McpManager(config, toolRegistry);
 
   const modelProvider = config.model.apiKey
-    ? new OpenAIProvider({ apiKey: config.model.apiKey, baseUrl: config.model.baseUrl, model: config.model.name })
+    ? new OpenAIProvider({
+        apiKey: config.model.apiKey,
+        baseUrl: config.model.baseUrl,
+        model: config.model.name,
+      })
     : new MockProvider(config.model.name);
 
   const messageStore = new InMemoryMessageStore();
@@ -50,7 +64,9 @@ export async function createApp(overrides?: { workspaceRoot?: string }) {
   }
 
   const mcpNames = Object.keys(config.mcpServers);
-  const contextManager = new ContextManager(messageStore, { systemPrompt: defaultSystemPrompt(workspaceRoot, { mcpServers: mcpNames }) });
+  const contextManager = new ContextManager(messageStore, {
+    systemPrompt: defaultSystemPrompt(workspaceRoot, { mcpServers: mcpNames }),
+  });
   const runManager = new RunManager();
 
   const agentLoop = new AgentLoop({

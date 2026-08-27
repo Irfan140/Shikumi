@@ -37,7 +37,9 @@ async function fetchUrl(url: string): Promise<string> {
   const html = await res.text();
   const text = stripHtml(html);
   const stack = detectStack(html);
-  const stackLine = stack.length ? `\nDetected tech hints: ${stack.join(", ")}` : "";
+  const stackLine = stack.length
+    ? `\nDetected tech hints: ${stack.join(", ")}`
+    : "";
   const title = (html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] ?? "").trim();
   return `URL: ${url}\nTitle: ${title}\n${text}${stackLine}`;
 }
@@ -45,8 +47,17 @@ async function fetchUrl(url: string): Promise<string> {
 export function webSearchTool() {
   return createTool({
     name: "web_search",
-    description: "Search the web or fetch a URL. If query is a URL (https://...), fetches and extracts page text + tech hints. If query mentions a domain like irfan.bond, fetches that site. For general queries, tries to fetch the most likely URL and returns content.",
-    inputSchema: z.object({ query: z.string().min(1).describe("URL or search query, e.g. 'https://irfan.bond' or 'irfan.bond tech stack'"), count: z.number().int().min(1).max(10).default(5) }),
+    description:
+      "Search the web or fetch a URL. If query is a URL (https://...), fetches and extracts page text + tech hints. If query mentions a domain like irfan.bond, fetches that site. For general queries, tries to fetch the most likely URL and returns content.",
+    inputSchema: z.object({
+      query: z
+        .string()
+        .min(1)
+        .describe(
+          "URL or search query, e.g. 'https://irfan.bond' or 'irfan.bond tech stack'",
+        ),
+      count: z.number().int().min(1).max(10).default(5),
+    }),
     execute: async ({ query }) => {
       const trimmed = query.trim();
       const urlMatch = trimmed.match(/https?:\/\/[^\s"']+/);
@@ -55,23 +66,39 @@ export function webSearchTool() {
           const content = await fetchUrl(urlMatch[0]);
           return { success: true, content };
         } catch (e) {
-          return { success: false, content: `Failed to fetch ${urlMatch[0]}: ${(e as Error).message}`, isError: true };
+          return {
+            success: false,
+            content: `Failed to fetch ${urlMatch[0]}: ${(e as Error).message}`,
+            isError: true,
+          };
         }
       }
-      const domainMatch = trimmed.match(/([a-z0-9-]+\.[a-z]{2,})(?:\/[^\s]*)?/i);
+      const domainMatch = trimmed.match(
+        /([a-z0-9-]+\.[a-z]{2,})(?:\/[^\s]*)?/i,
+      );
       if (domainMatch) {
         const candidate = `https://${domainMatch[0].replace(/^https?:\/\//, "")}`;
         try {
           const content = await fetchUrl(candidate);
-          return { success: true, content: `Query: "${trimmed}"\nFetched ${candidate}:\n${content}` };
+          return {
+            success: true,
+            content: `Query: "${trimmed}"\nFetched ${candidate}:\n${content}`,
+          };
         } catch {}
       }
       if (trimmed.toLowerCase().includes("irfan.bond")) {
         try {
           const content = await fetchUrl("https://irfan.bond/");
-          return { success: true, content: `Query: "${trimmed}"\nFetched https://irfan.bond/:\n${content}` };
+          return {
+            success: true,
+            content: `Query: "${trimmed}"\nFetched https://irfan.bond/:\n${content}`,
+          };
         } catch (e) {
-          return { success: false, content: `Failed to fetch irfan.bond: ${(e as Error).message}`, isError: true };
+          return {
+            success: false,
+            content: `Failed to fetch irfan.bond: ${(e as Error).message}`,
+            isError: true,
+          };
         }
       }
       return {

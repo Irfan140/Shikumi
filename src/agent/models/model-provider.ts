@@ -1,4 +1,8 @@
-import type { ModelRequest, ModelResponse, ModelStreamEvent } from "./model-types.js";
+import type {
+  ModelRequest,
+  ModelResponse,
+  ModelStreamEvent,
+} from "./model-types.js";
 
 export interface ModelProvider {
   readonly name: string;

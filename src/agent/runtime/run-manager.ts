@@ -10,7 +10,12 @@ export type Run = {
 export class RunManager {
   private runs = new Map<string, Run>();
   create(sessionId: string): Run {
-    const r: Run = { id: randomUUID(), sessionId, createdAt: new Date().toISOString(), status: "running" };
+    const r: Run = {
+      id: randomUUID(),
+      sessionId,
+      createdAt: new Date().toISOString(),
+      status: "running",
+    };
     this.runs.set(r.id, r);
     return r;
   }

@@ -1,4 +1,4 @@
-import { execa, type Options } from "execa";
+import { type Options, execa } from "execa";
 import { ShellError } from "../../errors/errors.js";
 
 export type ExecResult = {
