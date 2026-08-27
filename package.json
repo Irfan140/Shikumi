@@ -1,5 +1,5 @@
 {
-  "name": "shikumi",
+  "name": "@irfan140/shikumi",
   "workspaces": ["apps/*"],
   "version": "0.1.0",
   "description": "Shikumi — scalable CLI AI agent",

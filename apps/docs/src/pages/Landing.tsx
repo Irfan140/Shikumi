@@ -13,9 +13,9 @@ export function Landing({ onGetStarted }: { onGetStarted: () => void }) {
           <a className="btn" href="https://github.com" target="_blank" rel="noreferrer">GitHub</a>
         </div>
         <div className="hero-code">
-          <code>bunx shikumi</code>
+          <code>npm add @irfan140/shikumi</code>
           <span>or</span>
-          <code>shikumi setup</code>
+          <code>bun add @irfan140/shikumi</code>
         </div>
       </section>
 
