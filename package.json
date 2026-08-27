@@ -3,6 +3,9 @@
   "workspaces": ["apps/*"],
   "version": "0.1.0",
   "description": "Shikumi — scalable CLI AI agent",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "bin": {
     "shikumi": "./dist/index.js",
