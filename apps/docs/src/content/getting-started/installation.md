@@ -23,11 +23,16 @@ bun run src/cli/index.ts --help
 
 ## Global via npm
 
+Available at [npmjs.com/package/@irfan140/shikumi](https://www.npmjs.com/package/@irfan140/shikumi)
+
 ```bash
-bun install -g shikumi
+npm add @irfan140/shikumi
+# or
+bun add @irfan140/shikumi
+bun install -g @irfan140/shikumi
 shikumi --help
 # or without install
-bunx shikumi
+bunx @irfan140/shikumi
 ```
 
 ## Verify

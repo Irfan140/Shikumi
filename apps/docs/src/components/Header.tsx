@@ -8,7 +8,8 @@ export function Header({ onMenu }: { onMenu: () => void }) {
         </a>
         <nav className="header-nav">
           <a href="#/docs/what-is-shikumi">Docs</a>
-          <a href="https://github.com" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="https://www.npmjs.com/package/@irfan140/shikumi" target="_blank" rel="noreferrer">npm</a>
+          <a href="https://github.com/Irfan140/Shikumi" target="_blank" rel="noreferrer">GitHub</a>
         </nav>
         <button className="menu-btn" onClick={onMenu} aria-label="Menu">☰</button>
       </div>
