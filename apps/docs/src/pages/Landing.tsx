@@ -1,6 +1,22 @@
+import { useState } from "react";
 import { Architecture } from "../components/Architecture";
 
 export function Landing({ onGetStarted }: { onGetStarted: () => void }) {
+  const [copied, setCopied] = useState<string | null>(null);
+  const copy = async (t: string) => {
+    try {
+      await navigator.clipboard.writeText(t);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = t;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+    }
+    setCopied(t);
+    setTimeout(() => setCopied(null), 1500);
+  };
   return (
     <div className="landing">
       <section className="hero">
@@ -10,12 +26,23 @@ export function Landing({ onGetStarted }: { onGetStarted: () => void }) {
         <p className="sub">An extensible AI agent harness for the terminal.</p>
         <div className="hero-btns">
           <button className="btn primary" onClick={onGetStarted}>Get Started</button>
-          <a className="btn" href="https://github.com" target="_blank" rel="noreferrer">GitHub</a>
+          <a className="btn" href="https://github.com/Irfan140/Shikumi" target="_blank" rel="noreferrer">GitHub</a>
         </div>
-        <div className="hero-code">
-          <code>npm add @irfan140/shikumi</code>
-          <span>or</span>
-          <code>bun add @irfan140/shikumi</code>
+        <div className="hero-install">
+          <button className={`copy-code ${copied === "npm add @irfan140/shikumi" ? "copied" : ""}`} onClick={() => copy("npm add @irfan140/shikumi")} title="Click to copy">
+            <code>npm add @irfan140/shikumi</code>
+            <span className="copy-badge">{copied === "npm add @irfan140/shikumi" ? "✓ Copied!" : "⎘ Copy"}</span>
+          </button>
+          <span className="or">or</span>
+          <button className={`copy-code ${copied === "bun add @irfan140/shikumi" ? "copied" : ""}`} onClick={() => copy("bun add @irfan140/shikumi")} title="Click to copy">
+            <code>bun add @irfan140/shikumi</code>
+            <span className="copy-badge">{copied === "bun add @irfan140/shikumi" ? "✓ Copied!" : "⎘ Copy"}</span>
+          </button>
+        </div>
+        <div style={{ marginTop: "0.85rem" }}>
+          <a href="https://www.npmjs.com/package/@irfan140/shikumi" target="_blank" rel="noreferrer" style={{ fontSize: "0.85rem", color: "#a1a1aa" }}>
+            View on npm → @irfan140/shikumi
+          </a>
         </div>
       </section>
 
