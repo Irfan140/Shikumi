@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "description": "Shikumi — scalable CLI AI agent",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "type": "module",
   "bin": {
