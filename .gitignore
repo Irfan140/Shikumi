@@ -1,0 +1,12 @@
+node_modules
+dist
+apps/docs/dist
+apps/docs/node_modules
+.shikumi
+.harness
+*.db
+.env
+.env.development
+.env.local
+!.env.example
+

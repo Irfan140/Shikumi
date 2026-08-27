@@ -1,0 +1,44 @@
+{
+  "name": "shikumi",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "version": "0.1.0",
+  "description": "Shikumi — scalable CLI AI agent",
+  "type": "module",
+  "bin": {
+    "shikumi": "./dist/index.js",
+    "harness": "./dist/index.js",
+    "agent": "./dist/index.js"
+  },
+  "files": ["dist", "src", "README.md", ".env.example"],
+  "scripts": {
+    "dev": "bun run src/cli/index.ts",
+    "start": "bun run src/cli/index.ts",
+    "build": "bun build src/cli/index.ts --outdir dist --target bun",
+    "prepublishOnly": "bun run build",
+    "lint": "biome check src",
+    "format": "biome format src --write",
+    "typecheck": "tsc --noEmit",
+    "docs:dev": "bun --filter docs dev --host 0.0.0.0 --port 5173",
+    "docs:build": "bun --filter docs build",
+    "docs:preview": "bun --filter docs preview --host 0.0.0.0 --port 4173"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "^2.0.0",
+    "execa": "^9.5.2",
+    "ink": "5.2.1",
+    "ink-text-input": "^6.0.0",
+    "langsmith": "^0.9.0",
+    "openai": "^4.104.0",
+    "pino": "^9.6.0",
+    "react": "18",
+    "zod": "^4.0.5"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/bun": "^1.2.8",
+    "@types/react": "18",
+    "react-devtools-core": "^7.0.1",
+    "typescript": "^5.8.3"
+  }
+}
