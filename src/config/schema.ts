@@ -15,19 +15,27 @@ export const McpServerConfigSchema = z.discriminatedUnion("transport", [
 ]);
 
 export const ConfigSchema = z.object({
-  model: z.object({
-    provider: z.enum(["openai", "mock"]).default("openai"),
-    name: z.string().default("gpt-4o-mini"),
-    apiKey: z.string().optional(),
-    baseUrl: z.string().optional(),
-  }).default({ provider: "openai", name: "gpt-4o-mini" }),
-  workspace: z.object({
-    root: z.string().default(process.cwd()),
-  }).default({ root: process.cwd() }),
+  model: z
+    .object({
+      provider: z.enum(["openai", "mock"]).default("openai"),
+      name: z.string().default("gpt-4o-mini"),
+      apiKey: z.string().optional(),
+      baseUrl: z.string().optional(),
+    })
+    .default({ provider: "openai", name: "gpt-4o-mini" }),
+  workspace: z
+    .object({
+      root: z.string().default(process.cwd()),
+    })
+    .default({ root: process.cwd() }),
   mcpServers: z.record(z.string(), McpServerConfigSchema).default({}),
   ui: z.object({ theme: z.string().optional() }).default({}),
-  logging: z.object({ level: z.string().default("info") }).default({ level: "info" }),
-  persistence: z.object({ sqlitePath: z.string().default(".shikumi/shikumi.db") }).default({ sqlitePath: ".shikumi/shikumi.db" }),
+  logging: z
+    .object({ level: z.string().default("info") })
+    .default({ level: "info" }),
+  persistence: z
+    .object({ sqlitePath: z.string().default(".shikumi/shikumi.db") })
+    .default({ sqlitePath: ".shikumi/shikumi.db" }),
 });
 
 export type AppConfig = z.infer<typeof ConfigSchema>;

@@ -1,5 +1,5 @@
-import type { MessageRepository, SessionRepository } from "./repository.js";
 import type { Session } from "./models.js";
+import type { MessageRepository, SessionRepository } from "./repository.js";
 
 export class SessionManager {
   constructor(

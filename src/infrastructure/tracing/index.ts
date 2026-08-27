@@ -1,10 +1,14 @@
 export function isTracingEnabled(): boolean {
-  const v = process.env.LANGSMITH_TRACING ?? process.env.LANGCHAIN_TRACING_V2 ?? process.env.LANGSMITH_TRACING_V2;
+  const v =
+    process.env.LANGSMITH_TRACING ??
+    process.env.LANGCHAIN_TRACING_V2 ??
+    process.env.LANGSMITH_TRACING_V2;
   return v === "true" || v === "True" || v === "1";
 }
 
 export function getTracingProject(): string {
-  const raw = process.env.LANGSMITH_PROJECT ?? process.env.LANGCHAIN_PROJECT ?? "Shikumi";
+  const raw =
+    process.env.LANGSMITH_PROJECT ?? process.env.LANGCHAIN_PROJECT ?? "Shikumi";
   return raw.replace(/^["']|["']$/g, "");
 }
 
@@ -27,7 +31,10 @@ export async function getTraceable() {
   if (!isTracingEnabled()) return null;
   try {
     const mod = await import("langsmith/traceable");
-    return (mod as unknown as { traceable: (...a: unknown[]) => unknown }).traceable ?? null;
+    return (
+      (mod as unknown as { traceable: (...a: unknown[]) => unknown })
+        .traceable ?? null
+    );
   } catch {
     return null;
   }

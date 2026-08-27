@@ -5,7 +5,8 @@ export class ToolRegistry {
   private tools = new Map<string, Tool>();
 
   register(tool: Tool): void {
-    if (this.tools.has(tool.name)) throw new ToolError(`Tool already registered: ${tool.name}`);
+    if (this.tools.has(tool.name))
+      throw new ToolError(`Tool already registered: ${tool.name}`);
     this.tools.set(tool.name, tool);
   }
 
@@ -31,10 +32,25 @@ export class ToolRegistry {
 
   definitionsForMode(mode: string, allowSet?: Set<string>) {
     if (mode === "agent") return this.definitions();
-    const allowed = allowSet ?? new Set(["read_file", "list_directory", "search_files", "git_status", "git_diff", "git_log", "get_current_time", "web_search"]);
+    const allowed =
+      allowSet ??
+      new Set([
+        "read_file",
+        "list_directory",
+        "search_files",
+        "git_status",
+        "git_diff",
+        "git_log",
+        "get_current_time",
+        "web_search",
+      ]);
     return this.list()
       .filter((t) => allowed.has(t.name))
-      .map((t) => ({ name: t.name, description: t.description, parameters: t.jsonSchema }));
+      .map((t) => ({
+        name: t.name,
+        description: t.description,
+        parameters: t.jsonSchema,
+      }));
   }
 
   has(name: string): boolean {

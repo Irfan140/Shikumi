@@ -33,18 +33,22 @@ export function createTool<T extends z.ZodTypeAny>(opts: {
     description: opts.description,
     inputSchema: opts.inputSchema as unknown as z.ZodType<z.infer<T>>,
     jsonSchema: zodToJsonSchema(opts.inputSchema),
-    execute: opts.execute as (input: unknown, ctx: ToolContext) => Promise<ToolResult>,
+    execute: opts.execute as (
+      input: unknown,
+      ctx: ToolContext,
+    ) => Promise<ToolResult>,
   } as unknown as Tool<z.infer<T>>;
 }
 
 function zodToJsonSchema(schema: z.ZodTypeAny): Record<string, unknown> {
   try {
-    const maybe = (z as unknown as { toJSONSchema?: (s: unknown) => Record<string, unknown> }).toJSONSchema;
+    const maybe = (
+      z as unknown as { toJSONSchema?: (s: unknown) => Record<string, unknown> }
+    ).toJSONSchema;
     if (maybe) {
       const out = maybe(schema) as Record<string, unknown>;
-      const cleaned: Record<string, unknown> = { ...out };
-      delete cleaned["$schema"];
-      return cleaned;
+      const { $schema: _omit, ...cleaned } = out;
+      return cleaned as Record<string, unknown>;
     }
   } catch {}
   try {

@@ -12,7 +12,9 @@ function gitStatusTool() {
     description: "Show git status (porcelain)",
     inputSchema: z.object({}),
     execute: async (_, ctx) => {
-      const r = await execCommand("git", ["status", "--porcelain", "-b"], { cwd: ctx.workspaceRoot });
+      const r = await execCommand("git", ["status", "--porcelain", "-b"], {
+        cwd: ctx.workspaceRoot,
+      });
       return { success: true, content: r.stdout || r.stderr || "(clean)" };
     },
   });
@@ -25,7 +27,10 @@ function gitDiffTool() {
     execute: async ({ staged }, ctx) => {
       const args = staged ? ["diff", "--staged"] : ["diff"];
       const r = await execCommand("git", args, { cwd: ctx.workspaceRoot });
-      return { success: true, content: r.stdout.slice(0, 40000) || "(no diff)" };
+      return {
+        success: true,
+        content: r.stdout.slice(0, 40000) || "(no diff)",
+      };
     },
   });
 }
@@ -33,9 +38,15 @@ function gitLogTool() {
   return createTool({
     name: "git_log",
     description: "Show recent git log",
-    inputSchema: z.object({ count: z.number().int().min(1).max(50).default(10) }),
+    inputSchema: z.object({
+      count: z.number().int().min(1).max(50).default(10),
+    }),
     execute: async ({ count }, ctx) => {
-      const r = await execCommand("git", ["log", `--max-count=${count}`, "--oneline"], { cwd: ctx.workspaceRoot });
+      const r = await execCommand(
+        "git",
+        ["log", `--max-count=${count}`, "--oneline"],
+        { cwd: ctx.workspaceRoot },
+      );
       return { success: true, content: r.stdout || "(no commits)" };
     },
   });

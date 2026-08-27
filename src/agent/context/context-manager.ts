@@ -12,7 +12,11 @@ export class ContextManager {
     private opts: ContextOptions,
   ) {}
 
-  async append(sessionId: string, runId: string, message: ModelMessage): Promise<void> {
+  async append(
+    sessionId: string,
+    runId: string,
+    message: ModelMessage,
+  ): Promise<void> {
     await this.store.append(sessionId, runId, message);
   }
 
@@ -31,12 +35,14 @@ export class ContextManager {
   }
 }
 
-export function defaultSystemPrompt(workspaceRoot: string, opts?: { mcpServers?: string[] }): string {
+export function defaultSystemPrompt(
+  workspaceRoot: string,
+  opts?: { mcpServers?: string[] },
+): string {
   const now = new Date().toISOString();
-  const mcpPart =
-    opts?.mcpServers?.length
-      ? `MCP servers connected: ${opts.mcpServers.join(", ")} (tools from these servers are available).`
-      : `No MCP servers currently connected. MCP = Model Context Protocol (tool gateway), NOT Microsoft Certified Professional. To add MCP servers, configure .shikumi/config.json under mcpServers.`;
+  const mcpPart = opts?.mcpServers?.length
+    ? `MCP servers connected: ${opts.mcpServers.join(", ")} (tools from these servers are available).`
+    : "No MCP servers currently connected. MCP = Model Context Protocol (tool gateway), NOT Microsoft Certified Professional. To add MCP servers, configure .shikumi/config.json under mcpServers.";
   return `You are Shikumi — a production CLI AI agent.
 
 Workspace: ${workspaceRoot}

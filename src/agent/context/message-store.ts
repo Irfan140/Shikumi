@@ -1,14 +1,23 @@
 import type { ModelMessage } from "../models/model-types.js";
 
 export interface MessageStore {
-  append(sessionId: string, runId: string, message: ModelMessage): Promise<void>;
+  append(
+    sessionId: string,
+    runId: string,
+    message: ModelMessage,
+  ): Promise<void>;
   getBySession(sessionId: string): Promise<ModelMessage[]>;
   getByRun(runId: string): Promise<ModelMessage[]>;
 }
 
 export class InMemoryMessageStore implements MessageStore {
-  private messages: Map<string, { runId: string; message: ModelMessage }[]> = new Map();
-  async append(sessionId: string, runId: string, message: ModelMessage): Promise<void> {
+  private messages: Map<string, { runId: string; message: ModelMessage }[]> =
+    new Map();
+  async append(
+    sessionId: string,
+    runId: string,
+    message: ModelMessage,
+  ): Promise<void> {
     const arr = this.messages.get(sessionId) ?? [];
     arr.push({ runId, message });
     this.messages.set(sessionId, arr);
