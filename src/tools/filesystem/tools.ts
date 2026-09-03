@@ -82,8 +82,7 @@ function listDirectoryTool() {
         }) as unknown as { isDirectory(): boolean; name: string }[];
         const lines = [...entries]
           .sort((a, b) => {
-            const dirOrder =
-              Number(b.isDirectory()) - Number(a.isDirectory());
+            const dirOrder = Number(b.isDirectory()) - Number(a.isDirectory());
             if (dirOrder !== 0) return dirOrder;
             return String(a.name).localeCompare(String(b.name));
           })

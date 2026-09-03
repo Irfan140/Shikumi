@@ -2,14 +2,14 @@ import { Box, Text, useApp, useInput, useStdout } from "ink";
 import React, { useEffect, useRef, useState } from "react";
 import type { AgentEvent } from "../agent/runtime/events.js";
 import type { App } from "../application/bootstrap/create-app.js";
+import type { Item } from "./items.js";
 import {
+  type HistoryItem,
+  type SlashContext,
   matchSlashCommands,
   parseSlash,
   runSlashCommand,
-  type HistoryItem,
-  type SlashContext,
 } from "./slash.js";
-import type { Item } from "./items.js";
 import { selectVisible } from "./viewport.js";
 
 function Spinner({ active }: { active: boolean }) {
@@ -123,9 +123,7 @@ export function AppUI({
   // Slash-command palette derivation.
   const slashParsed = parseSlash(input);
   const slashOpen = slashParsed !== null && !busy && !pendingPerm;
-  const slashMatches = slashParsed
-    ? matchSlashCommands(slashParsed.name)
-    : [];
+  const slashMatches = slashParsed ? matchSlashCommands(slashParsed.name) : [];
   const slashSelected = slashMatches.length
     ? slashMatches[
         ((slashIndex % slashMatches.length) + slashMatches.length) %

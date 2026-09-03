@@ -1,10 +1,7 @@
-import type { App } from "../application/bootstrap/create-app.js";
 import type { ModelMessage } from "../agent/models/model-types.js";
 import { createModelProvider } from "../agent/models/providers/openai-provider.js";
-import {
-  DEFAULT_GROQ_MODEL,
-  DEFAULT_OPENAI_MODEL,
-} from "../config/schema.js";
+import type { App } from "../application/bootstrap/create-app.js";
+import { DEFAULT_GROQ_MODEL, DEFAULT_OPENAI_MODEL } from "../config/schema.js";
 
 export type SlashSayKind = "system" | "agent" | "user";
 
@@ -34,7 +31,9 @@ export type SlashCommand = {
   run: (args: string, ctx: SlashContext) => Promise<void>;
 };
 
-export function parseSlash(input: string): { name: string; args: string } | null {
+export function parseSlash(
+  input: string,
+): { name: string; args: string } | null {
   if (!input.startsWith("/")) return null;
   const rest = input.slice(1).trim();
   if (!rest) return { name: "", args: "" };
@@ -305,7 +304,10 @@ const modelCommand: SlashCommand = {
     const [providerRaw, ...nameParts] = args.split(/\s+/);
     const provider = providerRaw.toLowerCase();
     if (provider !== "openai" && provider !== "groq" && provider !== "mock") {
-      ctx.say(`Unknown provider "${providerRaw}". Use openai, groq, or mock.`, "system");
+      ctx.say(
+        `Unknown provider "${providerRaw}". Use openai, groq, or mock.`,
+        "system",
+      );
       return;
     }
     if (provider === "mock") {
@@ -413,7 +415,10 @@ const mcpCommand: SlashCommand = {
           : entry.url;
       return `  ${connected ? "●" : "○"} ${name} (${entry.transport}: ${via})`;
     });
-    ctx.say(`MCP servers:\n${lines.join("\n")}\n/mcp reconnect to retry`, "system");
+    ctx.say(
+      `MCP servers:\n${lines.join("\n")}\n/mcp reconnect to retry`,
+      "system",
+    );
   },
 };
 

@@ -37,8 +37,7 @@ export async function runSetup() {
   const providerRaw = (
     await prompt("Provider [openai/groq] (default: openai): ")
   ).toLowerCase();
-  const provider: ProviderName =
-    providerRaw === "groq" ? "groq" : "openai";
+  const provider: ProviderName = providerRaw === "groq" ? "groq" : "openai";
   const defaults = PROVIDER_DEFAULTS[provider];
 
   const apiKey = await prompt(

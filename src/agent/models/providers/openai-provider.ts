@@ -13,10 +13,10 @@ export const GROQ_DEFAULT_MODEL = "llama-3.3-70b-versatile";
 
 function missingKeyHint(provider?: string): string {
   if (provider === "groq")
-    return 'Set GROQ_API_KEY (env, .shikumi/config.json, or `shikumi setup`) to enable real model calls.';
+    return "Set GROQ_API_KEY (env, .shikumi/config.json, or `shikumi setup`) to enable real model calls.";
   if (provider === "openai")
-    return 'Set OPENAI_API_KEY (env, .shikumi/config.json, or `shikumi setup`) to enable real model calls.';
-  return 'Set OPENAI_API_KEY or GROQ_API_KEY (env, .shikumi/config.json, or `shikumi setup`) to enable real model calls.';
+    return "Set OPENAI_API_KEY (env, .shikumi/config.json, or `shikumi setup`) to enable real model calls.";
+  return "Set OPENAI_API_KEY or GROQ_API_KEY (env, .shikumi/config.json, or `shikumi setup`) to enable real model calls.";
 }
 
 export class OpenAIProvider implements ModelProvider {

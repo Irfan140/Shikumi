@@ -66,7 +66,8 @@ async function searchDuckDuckGo(
     );
   }
   for (const t of (data.RelatedTopics ?? []).slice(0, count)) {
-    if (t?.Text) lines.push(`- ${t.Text}${t.FirstURL ? ` (${t.FirstURL})` : ""}`);
+    if (t?.Text)
+      lines.push(`- ${t.Text}${t.FirstURL ? ` (${t.FirstURL})` : ""}`);
   }
   if (!lines.length) return null;
   return `DuckDuckGo results for "${query}":\n${lines.join("\n").slice(0, 8000)}`;

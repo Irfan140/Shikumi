@@ -2,10 +2,10 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ConfigurationError } from "../errors/errors.js";
 import {
-  DEFAULT_GROQ_MODEL,
-  DEFAULT_OPENAI_MODEL,
   type AppConfig,
   ConfigSchema,
+  DEFAULT_GROQ_MODEL,
+  DEFAULT_OPENAI_MODEL,
   type ModelProviderName,
 } from "./schema.js";
 
@@ -59,9 +59,7 @@ export function loadConfig(workspaceRoot: string = process.cwd()): AppConfig {
   // Explicit provider wins; otherwise auto-detect from available keys so a
   // GROQ-only user doesn't silently land on the OpenAI path.
   const provider: ModelProviderName =
-    envProvider ??
-    fileProvider ??
-    (groqKey && !openaiKey ? "groq" : "openai");
+    envProvider ?? fileProvider ?? (groqKey && !openaiKey ? "groq" : "openai");
 
   const envModelName =
     process.env.SHIKUMI_MODEL ||
@@ -76,7 +74,11 @@ export function loadConfig(workspaceRoot: string = process.cwd()): AppConfig {
     (provider === "groq" ? DEFAULT_GROQ_MODEL : DEFAULT_OPENAI_MODEL);
 
   const envApiKey =
-    provider === "groq" ? groqKey : provider === "openai" ? openaiKey : undefined;
+    provider === "groq"
+      ? groqKey
+      : provider === "openai"
+        ? openaiKey
+        : undefined;
   const envBaseUrl =
     (provider === "groq"
       ? process.env.GROQ_BASE_URL
