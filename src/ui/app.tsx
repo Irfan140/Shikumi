@@ -1,19 +1,16 @@
-import { Box, Static, Text, useApp, useInput, useStdout } from "ink";
+import { Box, Text, useApp, useInput, useStdout } from "ink";
 import React, { useEffect, useRef, useState } from "react";
 import type { AgentEvent } from "../agent/runtime/events.js";
 import type { App } from "../application/bootstrap/create-app.js";
-
-type Item =
-  | { id: string; kind: "system"; text: string }
-  | { id: string; kind: "user"; text: string }
-  | { id: string; kind: "agent"; text: string; streaming: boolean }
-  | {
-      id: string;
-      kind: "tool";
-      name: string;
-      status: "running" | "done" | "error";
-      detail: string;
-    };
+import {
+  matchSlashCommands,
+  parseSlash,
+  runSlashCommand,
+  type HistoryItem,
+  type SlashContext,
+} from "./slash.js";
+import type { Item } from "./items.js";
+import { selectVisible } from "./viewport.js";
 
 function Spinner({ active }: { active: boolean }) {
   const [frame, setFrame] = useState(0);
@@ -61,7 +58,9 @@ export function AppUI({
 }: { app: App; initialSessionId?: string }) {
   const { exit } = useApp();
   const { stdout } = useStdout();
-  const height = (stdout as unknown as { rows?: number })?.rows ?? 32;
+  const term = stdout as unknown as { rows?: number; columns?: number };
+  const height = term?.rows ?? 32;
+  const termWidth = term?.columns ?? 80;
   const [sessionId, setSessionId] = useState<string | undefined>(
     initialSessionId,
   );
@@ -73,14 +72,14 @@ export function AppUI({
       {
         id: "welcome",
         kind: "system",
-        text: "Welcome to Shikumi  •  Tab switch plan/agent  •  ↑/↓ scroll  •  Ctrl+C exit",
+        text: "Welcome to Shikumi  •  Tab switch plan/agent  •  / commands  •  ↑/↓ scroll  •  Ctrl+C exit",
       },
     ];
     if (!hasKey)
       base.push({
         id: "byok",
         kind: "system",
-        text: "BYOK: No API key — using Mock (demo). Run `shikumi setup` or set OPENAI_API_KEY / .shikumi/config.json for real LLM.",
+        text: "BYOK: No API key — using Mock (demo). Run `shikumi setup` or set OPENAI_API_KEY / GROQ_API_KEY / .shikumi/config.json for real LLM.",
       });
     return base;
   });
@@ -90,6 +89,7 @@ export function AppUI({
   const [mode, setMode] = useState<Mode>("plan");
   const [pendingPerm, setPendingPerm] = useState<PendingPerm | null>(null);
   const [modeToast, setModeToast] = useState<string | null>(null);
+  const [slashIndex, setSlashIndex] = useState(0);
   const modeToastRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const allowedAlwaysRef = useRef<Set<string>>(new Set());
   const pendingDeltaRef = useRef("");
@@ -97,7 +97,6 @@ export function AppUI({
   const activeAgentIdRef = useRef<string | null>(null);
   const modeRef = useRef<Mode>(mode);
   const itemsRef = useRef<Item[]>(items);
-  const viewportRef = useRef<number>(Math.max(8, height - 10));
   const scrollOffsetRef = useRef<number>(scrollOffset);
   const queuedItemsRef = useRef<Item[]>([]);
   const queuedFlushRef = useRef<string>("");
@@ -110,6 +109,29 @@ export function AppUI({
   useEffect(() => {
     scrollOffsetRef.current = scrollOffset;
   }, [scrollOffset]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset palette selection whenever the input text changes
+  useEffect(() => {
+    setSlashIndex(0);
+  }, [input]);
+
+  const flashModeToast = (nm: Mode, suffix = "") => {
+    if (modeToastRef.current) clearTimeout(modeToastRef.current);
+    setModeToast(`↦ ${nm.toUpperCase()}${suffix}`);
+    modeToastRef.current = setTimeout(() => setModeToast(null), 1500);
+  };
+
+  // Slash-command palette derivation.
+  const slashParsed = parseSlash(input);
+  const slashOpen = slashParsed !== null && !busy && !pendingPerm;
+  const slashMatches = slashParsed
+    ? matchSlashCommands(slashParsed.name)
+    : [];
+  const slashSelected = slashMatches.length
+    ? slashMatches[
+        ((slashIndex % slashMatches.length) + slashMatches.length) %
+          slashMatches.length
+      ]
+    : undefined;
 
   useEffect(() => {
     const id = setInterval(() => setCursorOn((v) => !v), 530);
@@ -147,20 +169,17 @@ export function AppUI({
     setItems((a) => [...a.slice(-120), it]);
   };
   const update = (id: string, patch: Partial<Item>) => {
-    if (scrollOffsetRef.current > 0) {
-      const q = queuedItemsRef.current.find((x) => x.id === id);
-      if (q) Object.assign(q, patch);
-      return;
-    }
+    // The item may live in the queued (hidden while scrolled) list or in the
+    // visible list depending on when it was created — patch both so tool
+    // status updates are never lost while scrolled up.
+    queuedItemsRef.current = queuedItemsRef.current.map((x) =>
+      x.id === id ? ({ ...x, ...patch } as Item) : x,
+    );
     setItems((a) =>
       a.map((x) => (x.id === id ? ({ ...x, ...patch } as Item) : x)),
     );
   };
 
-  const viewportSize = Math.max(8, height - 10);
-  useEffect(() => {
-    viewportRef.current = viewportSize;
-  }, [viewportSize]);
   useEffect(() => {
     const max = Math.max(0, items.length - 1);
     if (scrollOffset > max) setScrollOffset(max);
@@ -252,9 +271,7 @@ export function AppUI({
       if (key.tab) {
         setMode((m) => {
           const nm = m === "plan" ? "agent" : "plan";
-          if (modeToastRef.current) clearTimeout(modeToastRef.current);
-          setModeToast(`↦ ${nm.toUpperCase()} + allow`);
-          modeToastRef.current = setTimeout(() => setModeToast(null), 1500);
+          flashModeToast(nm, " + allow");
           return nm;
         });
         pendingPerm.resolve("allow");
@@ -262,12 +279,32 @@ export function AppUI({
       }
       return;
     }
+    if (slashOpen) {
+      if (key.upArrow) {
+        if (slashMatches.length)
+          setSlashIndex(
+            (i) => (i + slashMatches.length - 1) % slashMatches.length,
+          );
+        return;
+      }
+      if (key.downArrow) {
+        if (slashMatches.length)
+          setSlashIndex((i) => (i + 1) % slashMatches.length);
+        return;
+      }
+      if (key.tab) {
+        if (slashSelected) setInput(`/${slashSelected.name} `);
+        return;
+      }
+      if (key.return) {
+        if (input.trim()) handleSlash(input);
+        return;
+      }
+    }
     if (key.tab) {
       setMode((m) => {
         const nm = m === "plan" ? "agent" : "plan";
-        if (modeToastRef.current) clearTimeout(modeToastRef.current);
-        setModeToast(`↦ ${nm.toUpperCase()}`);
-        modeToastRef.current = setTimeout(() => setModeToast(null), 1500);
+        flashModeToast(nm);
         return nm;
       });
       return;
@@ -334,6 +371,85 @@ export function AppUI({
     }
   });
 
+  const renderHistory = (entries: HistoryItem[]) => {
+    setScrollOffset(0);
+    scrollOffsetRef.current = 0;
+    queuedItemsRef.current = [];
+    queuedFlushRef.current = "";
+    const mapped: Item[] = entries.slice(-60).map((e) => {
+      if (e.kind === "user")
+        return { id: uid(), kind: "user", text: e.text } as Item;
+      if (e.kind === "agent")
+        return {
+          id: uid(),
+          kind: "agent",
+          text: e.text,
+          streaming: false,
+        } as Item;
+      return {
+        id: uid(),
+        kind: "tool",
+        name: e.name,
+        status: "done",
+        detail: e.detail,
+      } as Item;
+    });
+    setItems(mapped);
+  };
+
+  const clearView = () => {
+    setScrollOffset(0);
+    scrollOffsetRef.current = 0;
+    queuedItemsRef.current = [];
+    queuedFlushRef.current = "";
+    setItems([]);
+  };
+
+  async function handleSlash(value: string) {
+    const parsed = parseSlash(value);
+    let text = value;
+    // Bare "/" + Enter runs the highlighted palette entry.
+    if (parsed && !parsed.name && slashSelected) {
+      text = `/${slashSelected.name}`;
+    }
+    setInput("");
+    setSlashIndex(0);
+    push({ id: uid(), kind: "user", text });
+    setBusy(true);
+    try {
+      const ctx: SlashContext = {
+        app,
+        sessionId,
+        setSessionId,
+        say: (t, kind = "system") => {
+          if (kind === "user") push({ id: uid(), kind: "user", text: t });
+          else if (kind === "agent")
+            push({ id: uid(), kind: "agent", text: t, streaming: false });
+          else push({ id: uid(), kind: "system", text: t });
+        },
+        renderHistory,
+        clear: clearView,
+        getMode: () => modeRef.current,
+        setMode: (m) => {
+          setMode(m);
+          flashModeToast(m);
+        },
+        exit: () => {
+          app.shutdown().finally(() => exit());
+        },
+      };
+      await runSlashCommand(text, ctx);
+    } catch (e) {
+      push({
+        id: uid(),
+        kind: "system",
+        text: `Error: ${(e as Error).message}`,
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleSubmit(value: string) {
     if (!value.trim() || busy) return;
     setInput("");
@@ -357,7 +473,7 @@ export function AppUI({
         push({
           id: uid(),
           kind: "system",
-          text: `session ${sid.slice(0, 8)} • ${app.config.model.name}`,
+          text: `session ${sid.slice(0, 8)} • ${app.config.model.provider}/${app.config.model.name}`,
         });
       } else {
         await app.preloadSession(sid);
@@ -388,10 +504,14 @@ export function AppUI({
             }
             flushPending();
             if (activeAgentId) {
-              const finalText = ev.content;
-              if (finalText) {
+              if (scrollOffsetRef.current > 0) {
+                // While scrolled up the streamed deltas are queued and applied
+                // on scroll-back — writing the full text here as well would
+                // duplicate it. Only flip the spinner off.
+                update(activeAgentId, { streaming: false } as Partial<Item>);
+              } else if (ev.content) {
                 update(activeAgentId, {
-                  text: finalText,
+                  text: ev.content,
                   streaming: false,
                 } as Partial<Item>);
               } else {
@@ -479,11 +599,22 @@ export function AppUI({
     }
   }
 
+  // Row-budgeted window: fill from the newest item backwards so total rendered
+  // rows stay within the terminal. Counting items (not rows) let a single long
+  // answer overflow the screen, and every repaint then scrolled = shaking.
   const visible = (() => {
-    if (scrollOffset === 0) return items.slice(-viewportSize);
-    const end = items.length - scrollOffset;
-    const start = Math.max(0, end - viewportSize);
-    return items.slice(start, end);
+    let reserved = 13; // header(3) + input(3) + footer(1) + margins/slack(6)
+    if (modeToast) reserved += 2;
+    if (scrollOffset > 0) reserved += 2;
+    if (pendingPerm) reserved += 8;
+    if (slashOpen) reserved += Math.min(slashMatches.length, 8) + 3;
+    if (busy && !streamingId) reserved += 1;
+    const budget = Math.max(6, height - reserved);
+    return selectVisible(items, {
+      termWidth,
+      budget,
+      scrollOffset,
+    });
   })();
 
   return (
@@ -498,7 +629,7 @@ export function AppUI({
           ⬢ Shikumi
         </Text>
         <Text color="gray">
-          {app.config.model.name} ·{" "}
+          {app.config.model.provider}/{app.config.model.name} ·{" "}
           {sessionId ? sessionId.slice(0, 8) : "new session"} ·{" "}
           {busy ? "working" : "ready"}
         </Text>
@@ -635,6 +766,36 @@ export function AppUI({
           </Text>
         </Box>
       ) : null}
+      {slashOpen ? (
+        <Box
+          marginTop={1}
+          borderStyle="single"
+          borderColor="cyan"
+          paddingX={1}
+          flexDirection="column"
+        >
+          {slashMatches.length === 0 ? (
+            <Text color="red">Unknown command — try /help</Text>
+          ) : (
+            slashMatches.slice(0, 8).map((c) => {
+              const selected = slashSelected === c;
+              return (
+                <Text
+                  key={c.name}
+                  color={selected ? "cyan" : "gray"}
+                  bold={selected}
+                >
+                  {selected ? "▸ " : "  "}/{c.name}
+                  {c.usage ? ` ${c.usage}` : ""} — {c.description}
+                </Text>
+              );
+            })
+          )}
+          <Text color="gray" dimColor>
+            ↑/↓ select · Tab complete · Enter run · Esc dismiss
+          </Text>
+        </Box>
+      ) : null}
       <Box
         marginTop={1}
         borderStyle="single"
@@ -671,7 +832,7 @@ export function AppUI({
       </Box>
       <Text color="gray" dimColor>
         {" "}
-        Enter send • Ctrl+C exit • PgUp/PgDn scroll
+        Enter send • / commands • Ctrl+C exit • PgUp/PgDn scroll
         {pendingPerm ? " • y/n/a permission" : ""}
         {sessionId ? ` • resume ${sessionId.slice(0, 8)}` : ""}
       </Text>

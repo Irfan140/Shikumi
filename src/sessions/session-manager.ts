@@ -16,4 +16,7 @@ export class SessionManager {
   list(limit?: number) {
     return this.sessions.list(limit);
   }
+  rename(id: string, title: string): Promise<void> {
+    return this.sessions.update(id, { title });
+  }
 }

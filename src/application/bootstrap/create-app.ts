@@ -3,10 +3,7 @@ import {
   defaultSystemPrompt,
 } from "../../agent/context/context-manager.js";
 import { InMemoryMessageStore } from "../../agent/context/message-store.js";
-import {
-  MockProvider,
-  OpenAIProvider,
-} from "../../agent/models/providers/openai-provider.js";
+import { createModelProvider } from "../../agent/models/providers/openai-provider.js";
 import { AgentLoop } from "../../agent/runtime/agent-loop.js";
 import { RunManager } from "../../agent/runtime/run-manager.js";
 import { ToolRegistry } from "../../agent/tools/tool-registry.js";
@@ -46,22 +43,14 @@ export async function createApp(overrides?: { workspaceRoot?: string }) {
 
   const mcpManager = new McpManager(config, toolRegistry);
 
-  const modelProvider = config.model.apiKey
-    ? new OpenAIProvider({
-        apiKey: config.model.apiKey,
-        baseUrl: config.model.baseUrl,
-        model: config.model.name,
-      })
-    : new MockProvider(config.model.name);
+  const modelProvider = createModelProvider({
+    provider: config.model.provider,
+    apiKey: config.model.apiKey,
+    baseUrl: config.model.baseUrl,
+    model: config.model.name,
+  });
 
   const messageStore = new InMemoryMessageStore();
-
-  if (messageRepo) {
-    const origAppend = messageStore.append.bind(messageStore);
-    messageStore.append = async (sid, rid, msg) => {
-      await origAppend(sid, rid, msg);
-    };
-  }
 
   const mcpNames = Object.keys(config.mcpServers);
   const contextManager = new ContextManager(messageStore, {
@@ -80,6 +69,22 @@ export async function createApp(overrides?: { workspaceRoot?: string }) {
     modelName: config.model.name,
   });
 
+  // Sessions whose history has already been loaded into the in-memory
+  // store. Without this, every prompt would re-append the same DB rows and
+  // duplicate context on each turn.
+  const preloadedSessions = new Set<string>();
+  async function preloadSession(sessionId: string) {
+    if (preloadedSessions.has(sessionId)) return;
+    preloadedSessions.add(sessionId);
+    if (!messageRepo) return;
+    const existing = await messageStore.getBySession(sessionId);
+    if (existing.length > 0) return;
+    const msgs = await messageRepo.getBySession(sessionId);
+    for (const m of msgs) {
+      await messageStore.append(sessionId, "preload", m);
+    }
+  }
+
   return {
     config,
     logger,
@@ -95,13 +100,7 @@ export async function createApp(overrides?: { workspaceRoot?: string }) {
     agentLoop,
     runManager,
     workspaceRoot,
-    async preloadSession(sessionId: string) {
-      if (!messageRepo) return;
-      const msgs = await messageRepo.getBySession(sessionId);
-      for (const m of msgs) {
-        await messageStore.append(sessionId, "preload", m);
-      }
-    },
+    preloadSession,
     async shutdown() {
       await mcpManager.closeAll();
       try {

@@ -20,4 +20,8 @@ Deltas are batched 32ms to avoid TUI shake. Critical tools check `needsPermissio
 
 ## Tracing
 
-If `LANGSMITH_TRACING=true`, `OpenAIProvider` is wrapped via `langsmith/wrappers/openai` and `AgentLoop`/`ToolExecutor` are wrapped via `traceable` — all LLM and tool calls appear in LangSmith.
+If `LANGSMITH_TRACING=true`, `OpenAIProvider` / `GroqProvider` are wrapped via `langsmith/wrappers/openai` and `AgentLoop`/`ToolExecutor` are wrapped via `traceable` — all LLM and tool calls appear in LangSmith.
+
+## Model Providers
+
+`createModelProvider()` picks the client from `model.provider`: `openai` → `OpenAIProvider`, `groq` → `GroqProvider` (OpenAI-compatible, defaults to `https://api.groq.com/openai/v1` + `llama-3.3-70b-versatile`), anything without a key → `MockProvider`.

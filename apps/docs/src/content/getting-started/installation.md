@@ -12,7 +12,7 @@ bun install
 
 # 3. Configure keys (BYOK)
 cp .env.example .env.development
-# edit OPENAI_API_KEY, or run:
+# edit OPENAI_API_KEY and/or GROQ_API_KEY, or run:
 bun run src/cli/index.ts setup
 # creates .shikumi/config.json (gitignored)
 

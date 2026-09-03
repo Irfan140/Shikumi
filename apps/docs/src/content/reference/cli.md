@@ -17,3 +17,21 @@ shikumi --help
 - `Tab` toggle PLAN (yellow) / AGENT (green) — toast, not history spam
 - `↑/↓` `PgUp/PgDn` scroll (frozen while scrolled, queued messages on `↓` to bottom)
 - `y/n/a` on permission prompt (write/run)
+
+## TUI Slash Commands
+
+Type `/` to open the palette (`↑/↓` select, `Tab` complete, `Enter` run, `Esc` dismiss):
+
+- `/help` — list all commands
+- `/status` — session, model, mode, message/tool-call counts, MCP
+- `/new` — start a fresh session
+- `/sessions` — list previous sessions (`*` = current)
+- `/resume <id>` (alias `/switch`) — switch to a previous session, history restored
+- `/rename <title>` — title the current session
+- `/model [provider] [name]` — show or switch model (`openai`/`groq`/`mock`)
+- `/plan`, `/agent` — switch mode
+- `/tools` — list available tools
+- `/mcp [reconnect]` — show MCP servers or reconnect
+- `/config` — show config (keys redacted)
+- `/clear` — clear the screen
+- `/quit` (alias `/exit`) — exit

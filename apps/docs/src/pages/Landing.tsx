@@ -87,7 +87,7 @@ export function Landing({ onGetStarted }: { onGetStarted: () => void }) {
         <h2>Getting Started</h2>
         <pre><code>{`git clone <repo> && cd shikumi
 bun install
-cp .env.example .env.development # add OPENAI_API_KEY
+cp .env.example .env.development # add OPENAI_API_KEY and/or GROQ_API_KEY
 bun run dev`}</code></pre>
         <p><a href="#/docs/installation" onClick={e=>{e.preventDefault(); onGetStarted();}}>→ Installation docs</a></p>
       </section>

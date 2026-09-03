@@ -6,7 +6,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { z } from "zod";
 import { createTool } from "../../agent/tools/tool.js";
 import { FilesystemError } from "../../errors/errors.js";
@@ -80,9 +80,14 @@ function listDirectoryTool() {
         const entries = readdirSync(abs, {
           withFileTypes: true,
         }) as unknown as { isDirectory(): boolean; name: string }[];
-        const lines = entries.map(
-          (e) => `${e.isDirectory() ? "dir " : "file"} ${String(e.name)}`,
-        );
+        const lines = [...entries]
+          .sort((a, b) => {
+            const dirOrder =
+              Number(b.isDirectory()) - Number(a.isDirectory());
+            if (dirOrder !== 0) return dirOrder;
+            return String(a.name).localeCompare(String(b.name));
+          })
+          .map((e) => `${e.isDirectory() ? "dir " : "file"} ${String(e.name)}`);
         return { success: true, content: lines.join("\n") || "(empty)" };
       } catch (e) {
         throw new FilesystemError((e as Error).message, e);
@@ -116,16 +121,15 @@ function searchFilesTool() {
           const name = String(e.name);
           if (name.startsWith(".") || name === "node_modules") continue;
           const full = join(dir, name);
+          const display = relative(ctx.workspaceRoot, full) || ".";
           if (e.isDirectory()) walk(full, depth + 1);
-          else if (name.includes(pattern))
-            results.push(full.replace(ctx.workspaceRoot, "."));
+          else if (name.includes(pattern)) results.push(display);
           else {
             try {
               const stat = statSync(full);
               if (stat.size > 200000) continue;
               const c = readFileSync(full, "utf-8");
-              if (c.includes(pattern))
-                results.push(full.replace(ctx.workspaceRoot, "."));
+              if (c.includes(pattern)) results.push(display);
             } catch {}
           }
           if (results.length > 50) break;

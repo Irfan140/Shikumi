@@ -11,6 +11,13 @@ export async function runPrompt(prompt: string, sessionId?: string) {
     sid = s.id;
     console.log(`Session: ${sid}`);
   } else {
+    const existing = await app.sessionManager.get(sid);
+    if (!existing) {
+      console.error(`Session not found: ${sid}`);
+      console.error("List sessions with: shikumi sessions");
+      await app.shutdown();
+      process.exit(1);
+    }
     await app.preloadSession(sid);
   }
   if (Object.keys(app.config.mcpServers).length)
@@ -33,6 +40,8 @@ export async function listSessions() {
   if (!sessions.length) console.log("No sessions");
   else
     for (const s of sessions)
-      console.log(`${s.id}  ${s.updatedAt}  ${s.workspaceRoot}`);
+      console.log(
+        `${s.id}  ${s.title ?? "(untitled)"}  ${s.updatedAt}  ${s.workspaceRoot}`,
+      );
   await app.shutdown();
 }

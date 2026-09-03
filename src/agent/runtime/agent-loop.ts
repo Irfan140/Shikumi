@@ -37,6 +37,12 @@ export class AgentLoop {
     this.toolExecutor = new ToolExecutor(opts.toolRegistry);
   }
 
+  /** Swap the model provider at runtime (used by `/model` in the TUI). */
+  setModelProvider(provider: ModelProvider, modelName: string): void {
+    this.opts.modelProvider = provider;
+    this.opts.modelName = modelName;
+  }
+
   async *run(
     sessionId: string,
     userInput: string,

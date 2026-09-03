@@ -25,6 +25,16 @@ async function main() {
       console.error('Usage: shikumi resume <session-id> "<prompt>"');
       process.exit(1);
     }
+    {
+      const app = await createApp();
+      const existing = await app.sessionManager.get(sid);
+      await app.shutdown();
+      if (!existing) {
+        console.error(`Session not found: ${sid}`);
+        console.error("List sessions with: shikumi sessions");
+        process.exit(1);
+      }
+    }
     if (prompt) await runPrompt(prompt, sid);
     else {
       const app = await createApp();
@@ -69,7 +79,7 @@ async function main() {
     };
     console.log(JSON.stringify(redacted, null, 2));
     console.log(
-      "\nBYOK: set via `shikumi setup`, `shikumi config set model.apiKey <sk-...>`, env OPENAI_API_KEY, or .shikumi/config.json",
+      "\nBYOK: set via `shikumi setup`, `shikumi config set model.provider openai|groq` + `shikumi config set model.apiKey <key>`, env OPENAI_API_KEY / GROQ_API_KEY, or .shikumi/config.json",
     );
     return;
   }
@@ -105,17 +115,17 @@ function printHelp() {
 
 Usage:
   shikumi                    Start interactive TUI (uses Mock if no key)
-  shikumi setup              Interactive BYOK setup — writes .shikumi/config.json
+  shikumi setup              Interactive BYOK setup (openai/groq) — writes .shikumi/config.json
   shikumi config             Show config (keys redacted)
-  shikumi config set <key> <value>  Set config e.g. model.apiKey sk-... / model.name gpt-4o-mini
+  shikumi config set <key> <value>  Set config e.g. model.provider groq / model.apiKey gsk-... / model.name llama-3.3-70b-versatile
   shikumi run "<prompt>"     Run a single prompt
   shikumi resume <id> [prompt]  Resume session
   shikumi sessions           List sessions
 
 BYOK: bring your own keys — never baked into build. Set via:
-  1) shikumi setup (interactive)
-  2) .shikumi/config.json  { "model": { "apiKey": "sk-..." } }
-  3) env  OPENAI_API_KEY / SHIKUMI_MODEL / OPENAI_BASE_URL
+  1) shikumi setup (interactive, openai or groq)
+  2) .shikumi/config.json  { "model": { "provider": "groq", "name": "llama-3.3-70b-versatile", "apiKey": "gsk-..." } }
+  3) env  OPENAI_API_KEY / GROQ_API_KEY, SHIKUMI_MODEL (or GROQ_MODEL / OPENAI_MODEL), SHIKUMI_PROVIDER, OPENAI_BASE_URL / GROQ_BASE_URL
   4) .env.development (local only, gitignored)
 
 Aliases: harness, agent (for backwards compat)

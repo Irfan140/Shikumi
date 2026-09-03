@@ -14,15 +14,21 @@ export const McpServerConfigSchema = z.discriminatedUnion("transport", [
   }),
 ]);
 
+export const GROQ_BASE_URL = "https://api.groq.com/openai/v1";
+export const DEFAULT_OPENAI_MODEL = "gpt-4o-mini";
+export const DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile";
+
+export type ModelProviderName = "openai" | "groq" | "mock";
+
 export const ConfigSchema = z.object({
   model: z
     .object({
-      provider: z.enum(["openai", "mock"]).default("openai"),
-      name: z.string().default("gpt-4o-mini"),
+      provider: z.enum(["openai", "groq", "mock"]).default("openai"),
+      name: z.string().default(DEFAULT_OPENAI_MODEL),
       apiKey: z.string().optional(),
       baseUrl: z.string().optional(),
     })
-    .default({ provider: "openai", name: "gpt-4o-mini" }),
+    .default({ provider: "openai", name: DEFAULT_OPENAI_MODEL }),
   workspace: z
     .object({
       root: z.string().default(process.cwd()),

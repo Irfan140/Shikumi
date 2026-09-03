@@ -118,10 +118,10 @@ export class SqliteMessageRepository implements MessageRepository {
       .run(now, sessionId);
   }
   async getBySession(sessionId: string): Promise<ModelMessage[]> {
+    // Order by rowid (insertion order): several messages can share the same
+    // created_at millisecond, which made ORDER BY created_at nondeterministic.
     const rows = this.db
-      .prepare(
-        "SELECT * FROM messages WHERE session_id=? ORDER BY created_at ASC",
-      )
+      .prepare("SELECT * FROM messages WHERE session_id=? ORDER BY rowid ASC")
       .all(sessionId) as Record<string, string>[];
     return rows.map((r) => ({
       role: r.role as ModelMessage["role"],

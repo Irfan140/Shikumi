@@ -15,7 +15,11 @@ function gitStatusTool() {
       const r = await execCommand("git", ["status", "--porcelain", "-b"], {
         cwd: ctx.workspaceRoot,
       });
-      return { success: true, content: r.stdout || r.stderr || "(clean)" };
+      if (r.failed || r.exitCode !== 0) {
+        const msg = r.stderr || r.stdout || "git status failed";
+        return { success: false, content: msg, isError: true };
+      }
+      return { success: true, content: r.stdout || "(clean)" };
     },
   });
 }
@@ -27,6 +31,10 @@ function gitDiffTool() {
     execute: async ({ staged }, ctx) => {
       const args = staged ? ["diff", "--staged"] : ["diff"];
       const r = await execCommand("git", args, { cwd: ctx.workspaceRoot });
+      if (r.failed || r.exitCode !== 0) {
+        const msg = r.stderr || r.stdout || "git diff failed";
+        return { success: false, content: msg, isError: true };
+      }
       return {
         success: true,
         content: r.stdout.slice(0, 40000) || "(no diff)",
@@ -47,6 +55,10 @@ function gitLogTool() {
         ["log", `--max-count=${count}`, "--oneline"],
         { cwd: ctx.workspaceRoot },
       );
+      if (r.failed || r.exitCode !== 0) {
+        const msg = r.stderr || r.stdout || "git log failed";
+        return { success: false, content: msg, isError: true };
+      }
       return { success: true, content: r.stdout || "(no commits)" };
     },
   });
