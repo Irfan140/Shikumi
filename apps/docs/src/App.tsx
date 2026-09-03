@@ -78,7 +78,16 @@ export default function App() {
           <Landing onGetStarted={() => { location.hash = "#/docs/what-is-shikumi"; window.scrollTo(0,0); }} />
         </main>
       )}
-      <footer className="footer">Shikumi — 仕組み for AI Agents · From Intelligence to Action.</footer>
+      <footer className="footer">
+        <div className="footer-inner">
+          <span>Shikumi — 仕組み · From intelligence to action.</span>
+          <nav>
+            <a href="#/docs/what-is-shikumi">Docs</a>
+            <a href="https://www.npmjs.com/package/@irfan140/shikumi" target="_blank" rel="noreferrer">npm</a>
+            <a href="https://github.com/Irfan140/Shikumi" target="_blank" rel="noreferrer">GitHub</a>
+          </nav>
+        </div>
+      </footer>
     </div>
   );
 }
